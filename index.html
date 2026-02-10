@@ -1,19 +1,727 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBRNE-WMD Intelligence Dashboard 2026 | Think Tank Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Roboto', sans-serif; margin: 0; background: linear-gradient(135deg, #0c1445 0%, #1a237e 100%); color: #e8eaf6; min-height: 100vh; }
-        .header { background: rgba(0,20,69,0.95); padding: 20px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        .header h1 { margin: 0; font-size: 1.8rem
+  <meta charset="UTF-8" />
+  <title>CBRNE WMD Intelligence Dashboard</title>
+
+  <!-- Libraries -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <!-- NOTE: ML model di-comment dulu supaya ringan & stabil di browser GitHub Pages -->
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-soft: #111827;
+      --panel: #020617;
+      --border: #1e293b;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #38bdf8;
+      --danger: #f97373;
+      --safe: #22c55e;
+      --card-radius: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1f2937, #020617);
+      color: var(--text);
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    h2 {
+      font-size: 16px;
+      margin: 0 0 8px;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 4px 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .header-main {
+      flex: 1;
+    }
+
+    .header-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 260px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    button {
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    button:hover {
+      background: #0ea5e9;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pill {
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      color: var(--muted);
+      user-select: none;
+    }
+
+    .pill.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 2fr 2fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: var(--card-radius);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      padding: 10px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.7);
+    }
+
+    .kpi-value {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .kpi-badge-high {
+      font-size: 11px;
+      color: var(--danger);
+    }
+
+    .kpi-badge-low {
+      font-size: 11px;
+      color: var(--safe);
+    }
+
+    #map {
+      width: 100%;
+      height: 330px;
+      border-radius: var(--card-radius);
+      overflow: hidden;
+    }
+
+    #network {
+      width: 100%;
+      height: 330px;
+      border-radius: var(--card-radius);
+      border: 1px solid var(--border);
+      background: #020617;
+    }
+
+    #timeline {
+      width: 100%;
+      height: 220px;
+      border-radius: var(--card-radius);
+      border: 1px solid var(--border);
+      background: #020617;
+    }
+
+    #events {
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .event-item {
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      border: 1px solid rgba(31, 41, 55, 0.8);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .event-item a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .event-meta {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .event-summary {
+      font-size: 12px;
+      margin-top: 4px;
+      color: var(--text);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 10px;
+      margin-right: 4px;
+    }
+
+    .badge-nuclear {
+      background: rgba(248, 113, 113, 0.1);
+      color: #f97373;
+      border: 1px solid rgba(248, 113, 113, 0.4);
+    }
+
+    .badge-chem {
+      background: rgba(52, 211, 153, 0.08);
+      color: #4ade80;
+      border: 1px solid rgba(74, 222, 128, 0.4);
+    }
+
+    .badge-bio {
+      background: rgba(56, 189, 248, 0.08);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .badge-rad {
+      background: rgba(252, 211, 77, 0.08);
+      color: #facc15;
+      border: 1px solid rgba(250, 204, 21, 0.4);
+    }
+
+    .badge-expl {
+      background: rgba(192, 132, 252, 0.1);
+      color: #c4b5fd;
+      border: 1px solid rgba(192, 132, 252, 0.4);
+    }
+
+    @media (max-width: 900px) {
+      .header {
+        flex-direction: column;
+      }
+      .header-controls {
+        width: 100%;
+        min-width: 0;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+      #map,
+      #network,
+      #timeline {
+        height: 260px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="header-main">
+      <h1>CBRNE WMD Intelligence Dashboard</h1>
+      <p>
+        Untuk analis kebijakan, diplomat, dan think tank senior: ringkasan tren nuklir, kimia,
+        biologis, radiologis, dan eksplosif berbasis sumber terbuka (OSINT) terkini.
+      </p>
+    </div>
+    <div class="header-controls">
+      <input
+        id="queryInput"
+        type="text"
+        placeholder="Contoh: nuclear Iran, sarin Syria, IAEA non‑compliance"
+      />
+      <div class="pill-row" id="cbrnePills">
+        <div class="pill active" data-cat="all">All</div>
+        <div class="pill" data-cat="nuclear">Nuclear</div>
+        <div class="pill" data-cat="chem">Chemical</div>
+        <div class="pill" data-cat="bio">Biological</div>
+        <div class="pill" data-cat="rad">Radiological</div>
+        <div class="pill" data-cat="expl">Explosive</div>
+      </div>
+      <button id="analyzeBtn">Update Intelligence Snapshot</button>
+    </div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="grid-3">
+    <div class="card">
+      <h2>Global Risk Index</h2>
+      <div class="kpi-value" id="kpiRisk">–</div>
+      <div class="kpi-label" id="kpiRiskLabel">Menunggu data…</div>
+    </div>
+    <div class="card">
+      <h2>Event Terpantau 30 Hari</h2>
+      <div class="kpi-value" id="kpiEvents">–</div>
+      <div class="kpi-label" id="kpiEventsLabel">Semua kategori</div>
+    </div>
+    <div class="card">
+      <h2>Compliance / Violation</h2>
+      <div class="kpi-value" id="kpiCompliance">–</div>
+      <div class="kpi-label" id="kpiComplianceLabel">IAEA / OPCW / UNSCR</div>
+    </div>
+  </div>
+
+  <!-- Map + Network -->
+  <div class="grid">
+    <div class="card">
+      <h2>Peta Lokasi & Situs Sensitif</h2>
+      <div id="map"></div>
+      <p id="mapNote">Klik marker untuk detail lokasi nuklir/kimia yang relevan kebijakan.</p>
+    </div>
+    <div class="card">
+      <h2>Jejaring Aktor & Rantai Supply</h2>
+      <div id="network"></div>
+      <p style="font-size:11px;color:var(--muted);margin-top:6px;">
+        Ukuran node ≈ relevansi dalam laporan publik. Hub antar negara, lokasi, dan prekursor
+        membantu identifikasi “broker” kunci dalam proliferasi.
+      </p>
+    </div>
+  </div>
+
+  <!-- Timeline + events -->
+  <div class="grid">
+    <div class="card">
+      <h2>Timeline Insiden</h2>
+      <div id="timeline"></div>
+      <p style="font-size:11px;color:var(--muted);margin-top:6px;">
+        Titik merah menandai laporan dengan risiko relatif lebih tinggi; distribusi waktu
+        membantu mendeteksi lonjakan (spike) sebelum peristiwa besar.
+      </p>
+    </div>
+    <div class="card">
+      <h2>Daftar Laporan Terpilih</h2>
+      <div id="events"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // === Konfigurasi CBRNE & sumber dasar (bisa diperluas) ===
+  const cbrneConfig = {
+    nuclear: { color: "#f97373", badge: "badge-nuclear" },
+    chem: { color: "#4ade80", badge: "badge-chem" },
+    bio: { color: "#38bdf8", badge: "badge-bio" },
+    rad: { color: "#facc15", badge: "badge-rad" },
+    expl: { color: "#c4b5fd", badge: "badge-expl" },
+  };
+
+  const rssSources = [
+    "https://www.opcw.org/media/news/rss.xml",
+    "https://disarmament.unoda.org/rss.xml",
+    "https://news.un.org/feed/subscribe/en/news/world/rss.xml"
+  ];
+
+  let currentCategory = "all";
+  let map;
+  let network;
+  const nodes = new vis.DataSet();
+  const edges = new vis.DataSet();
+
+  // === Helper: klasifikasi sederhana tipe CBRNE dari teks ===
+  function classifyType(text) {
+    const t = text.toLowerCase();
+    if (/(uranium|plutonium|iaea|nuclear|reactor|missile|icbm)/.test(t)) return "nuclear";
+    if (/(sarin|vx|mustard|chlorine|chemical weapon|opcw)/.test(t)) return "chem";
+    if (/(anthrax|smallpox|virus|lab leak|biological weapon|bwc|pathogen)/.test(t)) return "bio";
+    if (/(dirty bomb|radiological|cesium|cobalt|isotope)/.test(t)) return "rad";
+    if (/(explosive|ied|drone|missile test|rocket attack)/.test(t)) return "expl";
+    return null;
+  }
+
+  // === Helper: skor risiko sederhana (bukan ML berat, biar stabil) ===
+  function riskScore(event) {
+    let base = 0.4;
+    const t = (event.title + " " + event.summary).toLowerCase();
+    if (/test|launch|detonation|attack|strike/.test(t)) base += 0.2;
+    if (/non-compliance|violation|sanction|resolution|iaea/.test(t)) base += 0.2;
+    if (/civilian|urban|metropolitan/.test(t)) base += 0.1;
+    if (event.type === "nuclear") base += 0.1;
+    return Math.min(1, base);
+  }
+
+  // === Fetch RSS via proxy ringan (CORS) ===
+  async function fetchEvents(query) {
+    const events = [];
+    for (const url of rssSources) {
+      try {
+        const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
+        const res = await fetch(proxy);
+        const data = await res.json();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(data.contents, "text/xml");
+        const items = xml.querySelectorAll("item");
+        items.forEach((item) => {
+          const title = item.querySelector("title")?.textContent || "";
+          const summary = item.querySelector("description")?.textContent || "";
+          const dateStr = item.querySelector("pubDate")?.textContent;
+          const date = dateStr ? new Date(dateStr) : new Date();
+          const text = (title + " " + summary).toLowerCase();
+
+          if (query && !text.includes(query.toLowerCase())) return;
+
+          const type = classifyType(text);
+          if (currentCategory !== "all" && type && type !== currentCategory) return;
+
+          events.push({
+            title,
+            summary,
+            link: item.querySelector("link")?.textContent || "#",
+            date,
+            type,
+          });
+        });
+      } catch (e) {
+        console.warn("Gagal ambil RSS:", url, e);
+      }
+    }
+    // sort terbaru
+    events.sort((a, b) => b.date - a.date);
+    // batasi 50 biar ringan
+    return events.slice(0, 50);
+  }
+
+  // === Inisialisasi Map dan Network ===
+  function initMap() {
+    map = L.map("map").setView([30, 20], 2.4);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 10,
+      attribution: "&copy; OpenStreetMap",
+    }).addTo(map);
+
+    // contoh marker situs yang sering dibahas di literatur WMD publik
+    const knownSites = [
+      { name: "Natanz (Iran)", coord: [33.72, 51.73], type: "nuclear" },
+      { name: "Yongbyon (North Korea)", coord: [41.30, 125.75], type: "nuclear" },
+      { name: "Khan Sheikhoun (Syria)", coord: [35.45, 36.65], type: "chem" },
+      { name: "Halabja (Iraq)", coord: [35.18, 45.99], type: "chem" },
+    ];
+
+    knownSites.forEach((s) => {
+      L.circleMarker(s.coord, {
+        radius: 6,
+        color: cbrneConfig[s.type].color,
+        fillColor: cbrneConfig[s.type].color,
+        fillOpacity: 0.8,
+      })
+        .addTo(map)
+        .bindPopup(`${s.name} – sering dikutip dalam laporan WMD publik`);
+    });
+  }
+
+  function initNetwork() {
+    const container = document.getElementById("network");
+    const data = { nodes, edges };
+    const options = {
+      physics: { stabilization: true },
+      nodes: {
+        shape: "dot",
+        size: 12,
+        font: { color: "#e5e7eb", size: 11 },
+      },
+      edges: {
+        color: { color: "#4b5563" },
+        width: 1,
+        smooth: true,
+      },
+    };
+    network = new vis.Network(container, data, options);
+  }
+
+  // === Render network graph dari event ===
+  function buildNetwork(events) {
+    nodes.clear();
+    edges.clear();
+    const nodeIndex = new Map();
+    let edgeId = 0;
+
+    function addNode(label, groupKey, color) {
+      if (!nodeIndex.has(label)) {
+        const id = "n" + nodeIndex.size;
+        nodeIndex.set(label, id);
+        nodes.add({
+          id,
+          label,
+          color: { background: color || "#6b7280" },
+          group: groupKey,
+        });
+      }
+      return nodeIndex.get(label);
+    }
+
+    events.forEach((e, idx) => {
+      const eventId = addNode("E" + (idx + 1), "event", "#38bdf8");
+      const text = (e.title + " " + e.summary).toLowerCase();
+
+      // aktor negara
+      const actors =
+        text.match(/iran|north korea|syria|russia|china|israel|usa|un/i) || [];
+      actors.forEach((a) => {
+        const id = addNode(a.toUpperCase(), "actor", "#a855f7");
+        edges.add({ id: "e" + edgeId++, from: id, to: eventId });
+      });
+
+      // lokasi
+      const locs =
+        text.match(/natanz|yongbyon|damascus|tehran|tokyo|jakarta|halabja/i) || [];
+      locs.forEach((loc) => {
+        const id = addNode(loc, "loc", "#facc15");
+        edges.add({ id: "e" + edgeId++, from: id, to: eventId });
+      });
+
+      // prekursor / delivery
+      const precs =
+        text.match(/uranium|plutonium|sarin|vx|mustard|cesium|cobalt/i) || [];
+      precs.forEach((p) => {
+        const id = addNode(p.toUpperCase(), "precursor", "#22c55e");
+        edges.add({ id: "e" + edgeId++, from: id, to: eventId });
+      });
+    });
+  }
+
+  // === Timeline dengan D3 ===
+  function buildTimeline(events) {
+    const el = document.getElementById("timeline");
+    el.innerHTML = "";
+    const width = el.clientWidth;
+    const height = el.clientHeight;
+    const svg = d3
+      .select(el)
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    if (!events.length) return;
+
+    const dates = events.map((e) => e.date);
+    const x = d3
+      .scaleTime()
+      .domain(d3.extent(dates))
+      .range([40, width - 20]);
+
+    svg
+      .append("line")
+      .attr("x1", 40)
+      .attr("x2", width - 20)
+      .attr("y1", height / 2)
+      .attr("y2", height / 2)
+      .attr("stroke", "#4b5563")
+      .attr("stroke-width", 1);
+
+    svg
+      .selectAll("circle")
+      .data(events)
+      .enter()
+      .append("circle")
+      .attr("cx", (d) => x(d.date))
+      .attr("cy", height / 2)
+      .attr("r", (d) => 4 + riskScore(d) * 6)
+      .attr("fill", (d) => {
+        const type = d.type || "chem";
+        return cbrneConfig[type]?.color || "#38bdf8";
+      })
+      .attr("opacity", 0.9)
+      .append("title")
+      .text((d) => `${d.title}\n${d.date.toDateString()}`);
+
+    const last = events[0];
+    svg
+      .append("text")
+      .attr("x", 40)
+      .attr("y", 18)
+      .attr("fill", "#9ca3af")
+      .attr("font-size", 11)
+      .text(
+        `Rentang waktu: ${dates[dates.length - 1].toDateString()} – ${
+          dates[0].toDateString()
+        }`
+      );
+  }
+
+  // === Render daftar event + KPI ===
+  function renderEventsAndKPI(events) {
+    const listEl = document.getElementById("events");
+    listEl.innerHTML = "";
+    if (!events.length) {
+      listEl.innerHTML =
+        '<p style="font-size:13px;color:var(--muted)">Belum ada laporan yang cocok dengan filter saat ini.</p>';
+    }
+
+    let violationCount = 0;
+    let highRiskCount = 0;
+    const now = new Date();
+    let last30 = 0;
+
+    events.forEach((e) => {
+      const s = (e.summary || "").toLowerCase();
+      const risk = riskScore(e);
+      if (/non-compliance|violation|safeguards|resolution/.test(s)) {
+        violationCount++;
+      }
+      if (risk > 0.7) highRiskCount++;
+      const days = (now - e.date) / (1000 * 60 * 60 * 24);
+      if (days <= 30) last30++;
+
+      const type = e.type || "chem";
+      const badgeClass = cbrneConfig[type]?.badge || "badge-chem";
+
+      const div = document.createElement("div");
+      div.className = "event-item";
+      div.innerHTML = `
+        <div>
+          <span class="badge ${badgeClass}">${type.toUpperCase()}</span>
+          <span class="badge" style="background:rgba(148,163,184,0.14);color:#e5e7eb;border:1px solid rgba(148,163,184,0.4);">
+            Risk ${(risk * 100).toFixed(0)}%
+          </span>
+        </div>
+        <a href="${e.link}" target="_blank" rel="noopener noreferrer">${e.title}</a>
+        <div class="event-meta">
+          ${e.date.toDateString()}
+        </div>
+        <div class="event-summary">
+          ${e.summary.replace(/<\/?[^>]+(>|$)/g, "").slice(0, 200)}…
+        </div>
+      `;
+      listEl.appendChild(div);
+    });
+
+    // KPI
+    const avgRisk =
+      events.length > 0
+        ? (events.reduce((acc, e) => acc + riskScore(e), 0) / events.length).toFixed(
+            2
+          )
+        : 0;
+
+    const riskEl = document.getElementById("kpiRisk");
+    const riskLbl = document.getElementById("kpiRiskLabel");
+    riskEl.textContent = avgRisk ? avgRisk : "–";
+    riskLbl.textContent =
+      avgRisk >= 0.7
+        ? "Elevated risk berdasarkan laporan publik"
+        : "Belum terindikasi eskalasi tajam";
+
+    const evEl = document.getElementById("kpiEvents");
+    const evLbl = document.getElementById("kpiEventsLabel");
+    evEl.textContent = last30;
+    evLbl.textContent = "Laporan relevan 30 hari terakhir";
+
+    const compEl = document.getElementById("kpiCompliance");
+    const compLbl = document.getElementById("kpiComplianceLabel");
+    compEl.textContent = violationCount;
+    compLbl.textContent = "Referensi non‑compliance dalam teks laporan";
+  }
+
+  // === Handler utama ===
+  async function runAnalysis() {
+    const query = document.getElementById("queryInput").value.trim();
+    const btn = document.getElementById("analyzeBtn");
+    btn.disabled = true;
+    btn.textContent = "Mengambil & menganalisis data…";
+
+    const events = await fetchEvents(query);
+    buildNetwork(events);
+    buildTimeline(events);
+    renderEventsAndKPI(events);
+
+    btn.disabled = false;
+    btn.textContent = "Update Intelligence Snapshot";
+  }
+
+  // === Event listeners ===
+  document.getElementById("analyzeBtn").addEventListener("click", runAnalysis);
+
+  document.getElementById("cbrnePills").addEventListener("click", (e) => {
+    if (!e.target.classList.contains("pill")) return;
+    document
+      .querySelectorAll(".pill")
+      .forEach((p) => p.classList.remove("active"));
+    e.target.classList.add("active");
+    currentCategory = e.target.dataset.cat;
+    runAnalysis();
+  });
+
+  // Init awal
+  window.addEventListener("load", () => {
+    initMap();
+    initNetwork();
+    runAnalysis();
+  });
+</script>
+</body>
+</html>
