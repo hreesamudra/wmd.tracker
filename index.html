@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>CBRNE WMD Intelligence Dashboard</title>
+  <title>CBRNE WMD Intelligence Hub – Hree P. Samudra</title>
 
   <!-- Libraries -->
   <link
@@ -13,37 +13,93 @@
   <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
 
-  <!-- NOTE: ML model di-comment dulu supaya ringan & stabil di browser GitHub Pages -->
-
   <style>
     :root {
-      --bg: #0f172a;
-      --bg-soft: #111827;
+      --bg: #020617;
+      --bg-soft: #0b1220;
       --panel: #020617;
       --border: #1e293b;
       --text: #e5e7eb;
       --muted: #9ca3af;
       --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.12);
       --danger: #f97373;
       --safe: #22c55e;
       --card-radius: 10px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      padding: 16px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: radial-gradient(circle at top, #1f2937, #020617);
       color: var(--text);
     }
 
+    a { color: var(--accent); text-decoration: none; }
+
+    /* Top navigation */
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 24px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(15, 23, 42, 0.96);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(16px);
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .nav-title a {
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      font-size: 17px;
+      color: var(--text);
+    }
+
+    .nav-sub a {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .nav-link {
+      padding: 6px 9px;
+      border-radius: 999px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .nav-link.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.5);
+    }
+
+    .page {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 16px 16px 40px;
+    }
+
     h1 {
       margin: 0 0 4px;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 600;
     }
 
@@ -53,34 +109,36 @@
       font-weight: 600;
     }
 
+    h3 {
+      font-size: 14px;
+      margin: 0 0 6px;
+      font-weight: 600;
+    }
+
     p {
       margin: 4px 0;
       font-size: 13px;
       color: var(--muted);
     }
 
-    .page {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
     .header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 12px;
-      gap: 12px;
+      gap: 16px;
+      margin-bottom: 16px;
+      margin-top: 8px;
     }
 
-    .header-main {
-      flex: 1;
-    }
+    .header-main { flex: 1; }
+
+    .header-main p { max-width: 640px; }
 
     .header-controls {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      min-width: 260px;
+      gap: 8px;
+      min-width: 280px;
     }
 
     input[type="text"] {
@@ -91,6 +149,15 @@
       background: #020617;
       color: var(--text);
       font-size: 13px;
+    }
+
+    select {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text);
+      font-size: 12px;
     }
 
     button {
@@ -104,8 +171,11 @@
       font-weight: 500;
     }
 
-    button:hover {
-      background: #0ea5e9;
+    button:hover { background: #0ea5e9; }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
     }
 
     .pill-row {
@@ -120,7 +190,7 @@
       font-size: 11px;
       cursor: pointer;
       border: 1px solid var(--border);
-      background: var(--bg-soft);
+      background: #020617;
       color: var(--muted);
       user-select: none;
     }
@@ -128,30 +198,30 @@
     .pill.active {
       border-color: var(--accent);
       color: var(--accent);
-      background: rgba(56, 189, 248, 0.08);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 2fr 2fr;
-      gap: 12px;
-      margin-top: 12px;
+      background: var(--accent-soft);
     }
 
     .grid-3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 8px;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.4fr 1.6fr;
+      gap: 12px;
+      margin-top: 12px;
     }
 
     .card {
       background: rgba(15, 23, 42, 0.96);
       border-radius: var(--card-radius);
-      border: 1px solid rgba(148, 163, 184, 0.2);
+      border: 1px solid rgba(148, 163, 184, 0.22);
       padding: 10px;
       backdrop-filter: blur(12px);
-      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.7);
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.75);
     }
 
     .kpi-value {
@@ -164,26 +234,16 @@
       color: var(--muted);
     }
 
-    .kpi-badge-high {
-      font-size: 11px;
-      color: var(--danger);
-    }
-
-    .kpi-badge-low {
-      font-size: 11px;
-      color: var(--safe);
-    }
-
     #map {
       width: 100%;
-      height: 330px;
+      height: 340px;
       border-radius: var(--card-radius);
       overflow: hidden;
     }
 
     #network {
       width: 100%;
-      height: 330px;
+      height: 340px;
       border-radius: var(--card-radius);
       border: 1px solid var(--border);
       background: #020617;
@@ -191,14 +251,14 @@
 
     #timeline {
       width: 100%;
-      height: 220px;
+      height: 230px;
       border-radius: var(--card-radius);
       border: 1px solid var(--border);
       background: #020617;
     }
 
     #events {
-      max-height: 220px;
+      max-height: 230px;
       overflow-y: auto;
       padding-right: 4px;
     }
@@ -208,7 +268,7 @@
       border-radius: 6px;
       margin-bottom: 6px;
       border: 1px solid rgba(31, 41, 55, 0.8);
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.96);
     }
 
     .event-item a {
@@ -268,157 +328,502 @@
       border: 1px solid rgba(192, 132, 252, 0.4);
     }
 
+    .section-title {
+      font-size: 16px;
+      margin: 16px 0 6px;
+      font-weight: 600;
+    }
+
+    .video-list, .brief-list, .library-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 10px;
+    }
+
+    .simple-card {
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: var(--card-radius);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      padding: 10px;
+      font-size: 13px;
+    }
+
+    .simple-card h3 { margin-bottom: 4px; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 6px;
+      font-size: 10px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.12);
+      color: var(--muted);
+      margin-right: 4px;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1.7fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .link-inline {
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      cursor: pointer;
+    }
+
+    mark {
+      background: rgba(56, 189, 248, 0.2);
+      padding: 0 1px;
+    }
+
     @media (max-width: 900px) {
-      .header {
-        flex-direction: column;
-      }
-      .header-controls {
-        width: 100%;
-        min-width: 0;
-      }
-      .grid {
-        grid-template-columns: 1fr;
-      }
-      .grid-3 {
-        grid-template-columns: 1fr;
-      }
-      #map,
-      #network,
-      #timeline {
-        height: 260px;
-      }
+      .header { flex-direction: column; }
+      .header-controls { width: 100%; min-width: 0; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .about-grid { grid-template-columns: 1fr; }
+      #map, #network, #timeline { height: 240px; }
     }
   </style>
 </head>
 <body>
-<div class="page">
-  <div class="header">
-    <div class="header-main">
-      <h1>CBRNE WMD Intelligence Dashboard</h1>
-      <p>
-        Untuk analis kebijakan, diplomat, dan think tank senior: ringkasan tren nuklir, kimia,
-        biologis, radiologis, dan eksplosif berbasis sumber terbuka (OSINT) terkini.
-      </p>
-    </div>
-    <div class="header-controls">
-      <input
-        id="queryInput"
-        type="text"
-        placeholder="Contoh: nuclear Iran, sarin Syria, IAEA non‑compliance"
-      />
-      <div class="pill-row" id="cbrnePills">
-        <div class="pill active" data-cat="all">All</div>
-        <div class="pill" data-cat="nuclear">Nuclear</div>
-        <div class="pill" data-cat="chem">Chemical</div>
-        <div class="pill" data-cat="bio">Biological</div>
-        <div class="pill" data-cat="rad">Radiological</div>
-        <div class="pill" data-cat="expl">Explosive</div>
+  <!-- Top navigation -->
+  <div class="nav">
+    <div class="nav-left">
+      <div class="nav-title">
+        <a href="#section-tracker">CBRNE WMD Intelligence Hub</a>
       </div>
-      <button id="analyzeBtn">Update Intelligence Snapshot</button>
+      <div class="nav-sub">
+        <a href="#section-about" class="link-inline">Curated & built by Hree P. Samudra</a>
+      </div>
+    </div>
+    <div class="nav-links">
+      <div class="nav-link active" data-section="tracker">Tracker</div>
+      <div class="nav-link" data-section="videos">Video explainers</div>
+      <div class="nav-link" data-section="briefs">Policy briefs</div>
+      <div class="nav-link" data-section="library">Library</div>
+      <div class="nav-link" data-section="about">About</div>
     </div>
   </div>
 
-  <!-- KPI strip -->
-  <div class="grid-3">
-    <div class="card">
-      <h2>Global Risk Index</h2>
-      <div class="kpi-value" id="kpiRisk">–</div>
-      <div class="kpi-label" id="kpiRiskLabel">Menunggu data…</div>
-    </div>
-    <div class="card">
-      <h2>Event Terpantau 30 Hari</h2>
-      <div class="kpi-value" id="kpiEvents">–</div>
-      <div class="kpi-label" id="kpiEventsLabel">Semua kategori</div>
-    </div>
-    <div class="card">
-      <h2>Compliance / Violation</h2>
-      <div class="kpi-value" id="kpiCompliance">–</div>
-      <div class="kpi-label" id="kpiComplianceLabel">IAEA / OPCW / UNSCR</div>
-    </div>
-  </div>
+  <div class="page">
+    <!-- TRACKER SECTION -->
+    <section id="section-tracker">
+      <div class="header">
+        <div class="header-main">
+          <h1>CBRNE WMD Intelligence Dashboard</h1>
+          <p>
+            This dashboard aggregates open‑source signals on chemical, biological, radiological,
+            nuclear, and explosive (CBRNE) issues to support diplomats, policy professionals,
+            and analysts in tracking real‑world developments and narratives around weapons of
+            mass destruction.[web:95]
+          </p>
+          <p style="font-size:12px;">
+            Sources currently emphasise official and multilateral channels (e.g. OPCW, UNODA,
+            UN News, WHO emergencies), with simple transparent scoring rather than opaque
+            “black box” models.[web:95]
+          </p>
+          <p id="lastUpdated" style="font-size:11px;color:var(--muted);margin-top:4px;"></p>
+        </div>
+        <div class="header-controls">
+          <input
+            id="queryInput"
+            type="text"
+            placeholder="Examples: nuclear Iran, sarin Syria, IAEA non‑compliance"
+          />
+          <select id="timeWindow">
+            <option value="all">All time</option>
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+          <div class="pill-row" id="cbrnePills">
+            <div class="pill active" data-cat="all">All</div>
+            <div class="pill" data-cat="nuclear">Nuclear</div>
+            <div class="pill" data-cat="chem">Chemical</div>
+            <div class="pill" data-cat="bio">Biological</div>
+            <div class="pill" data-cat="rad">Radiological</div>
+            <div class="pill" data-cat="expl">Explosive</div>
+          </div>
+          <button id="analyzeBtn">Update intelligence snapshot</button>
+        </div>
+      </div>
 
-  <!-- Map + Network -->
-  <div class="grid">
-    <div class="card">
-      <h2>Peta Lokasi & Situs Sensitif</h2>
-      <div id="map"></div>
-      <p id="mapNote">Klik marker untuk detail lokasi nuklir/kimia yang relevan kebijakan.</p>
-    </div>
-    <div class="card">
-      <h2>Jejaring Aktor & Rantai Supply</h2>
-      <div id="network"></div>
-      <p style="font-size:11px;color:var(--muted);margin-top:6px;">
-        Ukuran node ≈ relevansi dalam laporan publik. Hub antar negara, lokasi, dan prekursor
-        membantu identifikasi “broker” kunci dalam proliferasi.
+      <!-- KPI strip -->
+      <div class="grid-3">
+        <div class="card">
+          <h2>Global risk index</h2>
+          <div class="kpi-value" id="kpiRisk">–</div>
+          <div class="kpi-label" id="kpiRiskLabel">Awaiting data…</div>
+        </div>
+        <div class="card">
+          <h2>Events in selected window</h2>
+          <div class="kpi-value" id="kpiEvents">–</div>
+          <div class="kpi-label" id="kpiEventsLabel">All categories</div>
+        </div>
+        <div class="card">
+          <h2>Compliance / violation signals</h2>
+          <div class="kpi-value" id="kpiCompliance">–</div>
+          <div class="kpi-label" id="kpiComplianceLabel">IAEA / OPCW / UNSCR references</div>
+        </div>
+      </div>
+
+      <!-- Map + Network -->
+      <div class="grid-2">
+        <div class="card">
+          <h2>Locations & sensitive sites</h2>
+          <div id="map"></div>
+          <p id="mapNote">
+            Markers highlight facilities and locations frequently referenced in public WMD
+            reporting (e.g. Natanz, Yongbyon, Douma, Ghouta, Seversk, Zaporizhzhia, Porton Down).[web:95]
+          </p>
+        </div>
+        <div class="card">
+          <h2>Actors and supply‑chain network</h2>
+          <div id="network"></div>
+          <p style="font-size:11px;color:var(--muted);margin-top:6px;">
+            Click a node once to highlight its links; click the background to reset. Node size
+            approximates how often an element appears across recent reports.[web:97]
+          </p>
+        </div>
+      </div>
+
+      <!-- Timeline + events -->
+      <div class="grid-2">
+        <div class="card">
+          <h2>Incident timeline</h2>
+          <div id="timeline"></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:11px;color:var(--muted);">
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#4ade80;display:inline-block;"></span> Biological
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#4b5563;display:inline-block;"></span> Chemical
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#f97373;display:inline-block;"></span> Nuclear / radiological
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#e5e7eb;border:2px solid #f97373;display:inline-block;"></span> Highlighted / key event
+            </div>
+          </div>
+          <p style="font-size:11px;color:var(--muted);margin-top:6px;">
+            Each dot represents a report. Outlined markers reflect higher inferred risk based on
+            language such as “test”, “launch”, “attack”, “non‑compliance”.[web:98]
+          </p>
+        </div>
+        <div class="card">
+          <h2>Selected reports</h2>
+          <div id="events"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIDEO EXPLAINERS SECTION -->
+    <section id="section-videos" style="display:none;">
+      <h2 class="section-title">Video explainers</h2>
+      <p>
+        The list below mirrors key themes in current CBRNE‑related disinformation work:
+        nuclear/radiological, chemical, biological, cooperation & assistance, health
+        security, and counter‑disinformation.[web:97]
       </p>
-    </div>
-  </div>
 
-  <!-- Timeline + events -->
-  <div class="grid">
-    <div class="card">
-      <h2>Timeline Insiden</h2>
-      <div id="timeline"></div>
-      <p style="font-size:11px;color:var(--muted);margin-top:6px;">
-        Titik merah menandai laporan dengan risiko relatif lebih tinggi; distribusi waktu
-        membantu mendeteksi lonjakan (spike) sebelum peristiwa besar.
+      <div class="video-list">
+        <div class="simple-card">
+          <h3><a href="https://gpwmdcounterdisinfo.com/video-explainers/" target="_blank" rel="noopener noreferrer">What is nuclear weapon and radiological weapon disinformation?</a></h3>
+          <p>
+            Explores how narratives about nuclear deterrence, “dirty bombs”, and radiological
+            threats are distorted to undermine trust in safeguards or justify escalation.[web:97]
+          </p>
+          <p><span class="tag">Nuclear</span><span class="tag">Radiological</span><span class="tag">Disinformation</span></p>
+        </div>
+
+        <div class="simple-card">
+          <h3><a href="https://gpwmdcounterdisinfo.com/video-explainers/" target="_blank" rel="noopener noreferrer">What is chemical weapon disinformation?</a></h3>
+          <p>
+            Shows common tactics used to question attribution of chemical attacks, including
+            attacks on OPCW fact‑finding missions and claims of staged incidents.[web:97]
+          </p>
+          <p><span class="tag">Chemical</span><span class="tag">CWC</span></p>
+        </div>
+
+        <div class="simple-card">
+          <h3><a href="https://gpwmdcounterdisinfo.com/video-explainers/" target="_blank" rel="noopener noreferrer">What is bioweapons disinformation?</a></h3>
+          <p>
+            Covers allegations about biolabs, misuse of public health information, and how these
+            narratives affect BWC cooperation and public trust in health authorities.[web:97]
+          </p>
+          <p><span class="tag">Biological</span><span class="tag">Health security</span></p>
+        </div>
+
+        <div class="simple-card">
+          <h3><a href="https://gpwmdcounterdisinfo.com/video-explainers/" target="_blank" rel="noopener noreferrer">BWC cooperation and assistance at risk</a></h3>
+          <p>
+            Examines how disinformation can erode willingness to share samples, expertise, and
+            support under the BWC’s cooperation and assistance provisions.[web:97]
+          </p>
+          <p><span class="tag">BWC</span><span class="tag">Cooperation</span></p>
+        </div>
+
+        <div class="simple-card">
+          <h3><a href="https://gpwmdcounterdisinfo.com/video-explainers/" target="_blank" rel="noopener noreferrer">Strengthening global health security</a></h3>
+          <p>
+            Connects biosecurity, surveillance, and response capacities with the broader CBRNE
+            agenda, stressing why health systems are a first line of defence.[web:97]
+          </p>
+          <p><span class="tag">Global health</span><span class="tag">Biosecurity</span></p>
+        </div>
+
+        <div class="simple-card">
+          <h3><a href="https://gpwmdcounterdisinfo.com/video-explainers/" target="_blank" rel="noopener noreferrer">How to counter disinformation</a></h3>
+          <p>
+            Outlines practical steps for diplomats and analysts: verify against primary sources,
+            map narratives over time, and coordinate messaging with partners.[web:97]
+          </p>
+          <p><span class="tag">Counter‑disinfo</span></p>
+        </div>
+
+        <div class="simple-card">
+          <h3><a href="https://gpwmdcounterdisinfo.com/video-explainers/" target="_blank" rel="noopener noreferrer">What is disinformation?</a></h3>
+          <p>
+            Provides baseline definitions distinguishing disinformation from misinformation and
+            propaganda, grounding the rest of the tracker in a shared vocabulary.[web:97]
+          </p>
+          <p><span class="tag">Concepts</span></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- POLICY BRIEFS SECTION -->
+    <section id="section-briefs" style="display:none;">
+      <h2 class="section-title">Policy briefs – current focus</h2>
+      <p>
+        Short, structured notes aimed at busy diplomats and senior analysts. These are
+        illustrative templates; links point to external policy material you can build on.[web:97]
       </p>
-    </div>
-    <div class="card">
-      <h2>Daftar Laporan Terpilih</h2>
-      <div id="events"></div>
-    </div>
+
+      <div class="brief-list">
+        <div class="simple-card">
+          <h3><a href="https://gpwmdcounterdisinfo.com/policy-briefs/" target="_blank" rel="noopener noreferrer">CBRN disinformation in multilateral debates</a></h3>
+          <p>
+            Disinformation campaigns have increasingly targeted OPCW, the BWC, and IAEA
+            processes, often to erode trust in investigations or to reframe incidents as
+            “false flags”.[web:97]
+          </p>
+          <p>
+            This hub’s tracker view helps identify when similar narratives recur around
+            specific incidents or facilities, supporting early awareness and response.[web:97]
+          </p>
+          <p><span class="tag">Disinformation</span><span class="tag">Multilateral</span></p>
+        </div>
+
+        <div class="simple-card">
+          <h3><a href="https://gpwmdcounterdisinfo.com/policy-briefs/#tactic-spotlights" target="_blank" rel="noopener noreferrer">Tactic spotlights</a></h3>
+          <ul style="padding-left:16px;font-size:12px;color:var(--muted);">
+            <li>Denial: framing confirmed use of chemical weapons as fabrication or “staged”.</li>
+            <li>Mirror‑accusation: accusing other states of violations to deflect attention.</li>
+            <li>Legal grey‑zoning: exploiting dual‑use technology narratives to normalise risk.</li>
+          </ul>
+          <p>
+            Cross‑checking open‑source reporting with official UN/OPCW/IAEA material reduces
+            the impact of these tactics in policy debates.[web:97]
+          </p>
+          <p><span class="tag">Narratives</span><span class="tag">Counter‑disinfo</span></p>
+        </div>
+
+        <div class="simple-card">
+          <h3><a href="https://gpwmdcounterdisinfo.com/policy-briefs/#monitoring-snapshots" target="_blank" rel="noopener noreferrer">Monitoring snapshots & primers</a></h3>
+          <p>
+            You can extend this site with static snapshots (e.g. quarterly) summarising key
+            incidents, verification issues, and disinformation trends for each CBRNE domain.[web:97]
+          </p>
+          <p>
+            Primer briefs can explain foundational topics such as delivery systems, CBRNE
+            response frameworks, or regional WMD‑free‑zone initiatives.[web:97]
+          </p>
+          <p><span class="tag">Snapshot</span><span class="tag">Primer</span></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIBRARY SECTION -->
+    <section id="section-library" style="display:none;">
+      <h2 class="section-title">Reference library</h2>
+      <p>
+        Selected open‑source references that underpin this dashboard’s categories and
+        terminology (you can expand this into a full bibliography over time).[web:96]
+      </p>
+
+      <div class="library-list">
+        <div class="simple-card">
+          <h3><a href="https://i-intelligence.eu/uploads/public-documents/OSINT_Handbook_2020.pdf" target="_blank" rel="noopener noreferrer">Open Source Intelligence Tools & Resources Handbook</a></h3>
+          <p>
+            Practical overview of OSINT methodologies and tool categories relevant for
+            security, including WMD‑related monitoring.[cite:0]
+          </p>
+          <p><span class="tag">OSINT</span><span class="tag">Methods</span></p>
+        </div>
+
+        <div class="simple-card">
+          <h3>Chemical, biological, radiological, nuclear frameworks</h3>
+          <p>
+            Core treaty and institutional references: CWC (OPCW), BWC (UN), nuclear
+            safeguards (IAEA), and Security Council resolutions on WMD proliferation.[web:96]
+          </p>
+          <p><span class="tag">CWC</span><span class="tag">BWC</span><span class="tag">NPT</span></p>
+          <p>
+            <a href="https://www.opcw.org/chemical-weapons-convention" target="_blank">CWC</a> ·
+            <a href="https://www.un.org/disarmament/biological-weapons/" target="_blank">BWC</a> ·
+            <a href="https://www.iaea.org/" target="_blank">IAEA</a>
+          </p>
+        </div>
+
+        <div class="simple-card">
+          <h3><a href="https://gpwmdcounterdisinfo.com/cbrn-tracker/" target="_blank" rel="noopener noreferrer">CBRN disinformation tracking</a></h3>
+          <p>
+            The GPWMD CBRN Disinformation Tracker is one example of how systematic tracking
+            of narratives can inform multilateral disarmament debates.[web:97]
+          </p>
+          <p><span class="tag">CBRN Disinformation</span></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT SECTION -->
+    <section id="section-about" style="display:none;">
+      <h2 class="section-title">About this site</h2>
+      <div class="about-grid">
+        <div class="simple-card">
+          <h3>Author</h3>
+          <p>
+            This prototype is curated and maintained by <strong>Hree P. Samudra</strong>, an
+            emerging WMD policy analyst with a focus on OSINT‑based monitoring, disarmament
+            diplomacy, and the impact of information operations on CBRNE governance.[cite:0]
+          </p>
+          <p>
+            The aim is to provide a structured, transparent tool that complements—not replaces—
+            official reporting by organisations such as the UN, OPCW, IAEA, and regional bodies.[cite:0]
+          </p>
+        </div>
+        <div class="simple-card">
+          <h3>Intended users & limitations</h3>
+          <p>
+            The hub is designed for diplomats, policy officers, and researchers who need a quick
+            situational picture of open‑source reporting on WMD and CBRNE topics.[web:96]
+          </p>
+          <p>
+            It does not ingest classified material, and its risk scores are intentionally simple
+            and explainable to avoid over‑claiming predictive power. All interpretations should be
+            cross‑checked against official sources and expert judgement.[web:96]
+          </p>
+          <p style="font-size:11px;color:var(--muted);margin-top:6px;">
+            Feedback, suggestions, and critical reading are encouraged as part of an iterative
+            improvement process.
+          </p>
+        </div>
+      </div>
+    </section>
   </div>
-</div>
 
 <script>
-  // === Konfigurasi CBRNE & sumber dasar (bisa diperluas) ===
+  // === Navigation between sections ===
+  const sections = ["tracker", "videos", "briefs", "library", "about"];
+  document.querySelectorAll(".nav-link").forEach(link => {
+    link.addEventListener("click", () => {
+      const target = link.dataset.section;
+      document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"));
+      link.classList.add("active");
+      sections.forEach(sec => {
+        document.getElementById("section-" + sec).style.display =
+          sec === target ? "block" : "none";
+      });
+      if (target === "tracker") {
+        setTimeout(() => {
+          if (window.map) map.invalidateSize();
+          if (window.network) network.redraw();
+        }, 100);
+      }
+      window.location.hash = "section-" + target;
+    });
+  });
+
+  // also make header title/about scroll correctly
+  document.querySelectorAll('a[href^="#section-"]').forEach(a => {
+    a.addEventListener("click", (e) => {
+      const id = a.getAttribute("href").substring(1);
+      const sec = document.getElementById(id);
+      if (!sec) return;
+      e.preventDefault();
+      sections.forEach(s => {
+        document.getElementById("section-" + s).style.display =
+          ("section-" + s) === id ? "block" : "none";
+      });
+      document.querySelectorAll(".nav-link").forEach(l => {
+        l.classList.toggle("active", "section-" + l.dataset.section === id);
+      });
+      sec.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  // === CBRNE configuration ===
   const cbrneConfig = {
     nuclear: { color: "#f97373", badge: "badge-nuclear" },
-    chem: { color: "#4ade80", badge: "badge-chem" },
-    bio: { color: "#38bdf8", badge: "badge-bio" },
-    rad: { color: "#facc15", badge: "badge-rad" },
-    expl: { color: "#c4b5fd", badge: "badge-expl" },
+    chem:    { color: "#4ade80", badge: "badge-chem" },
+    bio:     { color: "#38bdf8", badge: "badge-bio" },
+    rad:     { color: "#facc15", badge: "badge-rad" },
+    expl:    { color: "#c4b5fd", badge: "badge-expl" }
   };
 
+  // More feeds for denser data
   const rssSources = [
     "https://www.opcw.org/media/news/rss.xml",
     "https://disarmament.unoda.org/rss.xml",
-    "https://news.un.org/feed/subscribe/en/news/world/rss.xml"
+    "https://news.un.org/feed/subscribe/en/news/world/rss.xml",
+    "https://www.who.int/feeds/entity/emergencies/en/rss.xml",
+    "https://feeds.bbci.co.uk/news/world/rss.xml"
   ];
 
   let currentCategory = "all";
-  let map;
-  let network;
+  let map, network;
   const nodes = new vis.DataSet();
   const edges = new vis.DataSet();
+  let eventsCache = [];
+  let lastUpdated = null;
 
-  // === Helper: klasifikasi sederhana tipe CBRNE dari teks ===
+  // === Classification and simple scoring ===
   function classifyType(text) {
     const t = text.toLowerCase();
-    if (/(uranium|plutonium|iaea|nuclear|reactor|missile|icbm)/.test(t)) return "nuclear";
-    if (/(sarin|vx|mustard|chlorine|chemical weapon|opcw)/.test(t)) return "chem";
-    if (/(anthrax|smallpox|virus|lab leak|biological weapon|bwc|pathogen)/.test(t)) return "bio";
-    if (/(dirty bomb|radiological|cesium|cobalt|isotope)/.test(t)) return "rad";
-    if (/(explosive|ied|drone|missile test|rocket attack)/.test(t)) return "expl";
+    if (/(uranium|plutonium|iaea|nuclear|reactor|missile|icbm|warhead|deterrence)/.test(t)) return "nuclear";
+    if (/(sarin|vx|mustard|chlorine|chemical weapon|opcw|toxic agent|nerve agent)/.test(t)) return "chem";
+    if (/(anthrax|smallpox|virus|lab leak|biological weapon|bwc|pathogen|biosafety)/.test(t)) return "bio";
+    if (/(dirty bomb|radiological|cesium|cobalt|isotope|radiation)/.test(t)) return "rad";
+    if (/(explosive|ied|drone|missile test|rocket attack|blast)/.test(t)) return "expl";
     return null;
   }
 
-  // === Helper: skor risiko sederhana (bukan ML berat, biar stabil) ===
   function riskScore(event) {
     let base = 0.4;
     const t = (event.title + " " + event.summary).toLowerCase();
     if (/test|launch|detonation|attack|strike/.test(t)) base += 0.2;
     if (/non-compliance|violation|sanction|resolution|iaea/.test(t)) base += 0.2;
-    if (/civilian|urban|metropolitan/.test(t)) base += 0.1;
+    if (/civilian|urban|metropolitan|population/.test(t)) base += 0.1;
     if (event.type === "nuclear") base += 0.1;
     return Math.min(1, base);
   }
 
-  // === Fetch RSS via proxy ringan (CORS) ===
+  // === Fetch RSS with simple proxy (CORS) + provenance ===
   async function fetchEvents(query) {
     const events = [];
     for (const url of rssSources) {
+      let sourceLabel = "Other";
+      if (url.includes("opcw.org")) sourceLabel = "OPCW";
+      else if (url.includes("unoda.org")) sourceLabel = "UNODA";
+      else if (url.includes("news.un.org")) sourceLabel = "UN News";
+      else if (url.includes("who.int")) sourceLabel = "WHO";
+      else if (url.includes("bbc.co.uk")) sourceLabel = "BBC";
+
       try {
         const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
         const res = await fetch(proxy);
@@ -437,6 +842,7 @@
 
           const type = classifyType(text);
           if (currentCategory !== "all" && type && type !== currentCategory) return;
+          if (!type) return;
 
           events.push({
             title,
@@ -444,19 +850,18 @@
             link: item.querySelector("link")?.textContent || "#",
             date,
             type,
+            source: sourceLabel
           });
         });
       } catch (e) {
-        console.warn("Gagal ambil RSS:", url, e);
+        console.warn("Failed to fetch RSS:", url, e);
       }
     }
-    // sort terbaru
     events.sort((a, b) => b.date - a.date);
-    // batasi 50 biar ringan
-    return events.slice(0, 50);
+    return events.slice(0, 160);
   }
 
-  // === Inisialisasi Map dan Network ===
+  // === Map initialisation, with more sites ===
   function initMap() {
     map = L.map("map").setView([30, 20], 2.4);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -464,23 +869,32 @@
       attribution: "&copy; OpenStreetMap",
     }).addTo(map);
 
-    // contoh marker situs yang sering dibahas di literatur WMD publik
     const knownSites = [
-      { name: "Natanz (Iran)", coord: [33.72, 51.73], type: "nuclear" },
-      { name: "Yongbyon (North Korea)", coord: [41.30, 125.75], type: "nuclear" },
-      { name: "Khan Sheikhoun (Syria)", coord: [35.45, 36.65], type: "chem" },
-      { name: "Halabja (Iraq)", coord: [35.18, 45.99], type: "chem" },
-    ];
+      { name: "Natanz enrichment complex (Iran)", coord: [33.724, 51.733], type: "nuclear" },
+      { name: "Fordow fuel enrichment plant (Iran)", coord: [34.884, 50.995], type: "nuclear" },
+      { name: "Arak heavy water reactor (Iran)", coord: [34.392, 49.473], type: "nuclear" },
+      { name: "Yongbyon nuclear complex (North Korea)", coord: [39.794, 125.753], type: "nuclear" },
+      { name: "Punggye-ri nuclear test site (North Korea)", coord: [41.282, 129.109], type: "nuclear" },
+      { name: "Khan Sheikhoun (Syria – sarin attack area)", coord: [35.444, 36.651], type: "chem" },
+      { name: "Ghouta (Syria – 2013 attacks)", coord: [33.513, 36.292], type: "chem" },
+      { name: "Douma (Syria – 2018 incident)", coord: [33.572, 36.404], type: "chem" },
+      { name: "Halabja (Iraq – 1988 attack)", coord: [35.177, 45.986], type: "chem" },
+      { name: "Shikhany (Russia – former CW facility)", coord: [52.111, 47.209], type: "chem" },
+      { name: "Porton Down (UK – defence research)", coord: [51.133, -1.734], type: "bio" },
+      { name: "Seversk (Russia – former plutonium production)", coord: [56.616, 84.85], type: "nuclear" },
+      { name: "Zaporizhzhia NPP (Ukraine)", coord: [47.509, 34.588], type: "nuclear" },
+      { name: "Fukushima Daiichi NPP (Japan)", coord: [37.421, 141.034], type: "rad" }
+    ]; // known from public WMD reporting[cite:0]
 
     knownSites.forEach((s) => {
       L.circleMarker(s.coord, {
         radius: 6,
         color: cbrneConfig[s.type].color,
         fillColor: cbrneConfig[s.type].color,
-        fillOpacity: 0.8,
+        fillOpacity: 0.85,
       })
         .addTo(map)
-        .bindPopup(`${s.name} – sering dikutip dalam laporan WMD publik`);
+        .bindPopup(`${s.name} – frequently cited in public WMD / CBRNE reporting.`);
     });
   }
 
@@ -491,7 +905,7 @@
       physics: { stabilization: true },
       nodes: {
         shape: "dot",
-        size: 12,
+        size: 14,
         font: { color: "#e5e7eb", size: 11 },
       },
       edges: {
@@ -499,11 +913,37 @@
         width: 1,
         smooth: true,
       },
+      interaction: {
+        hover: true,
+        tooltipDelay: 150
+      }
     };
     network = new vis.Network(container, data, options);
+
+    // click to highlight neighbours
+    network.on("click", function (params) {
+      if (!params.nodes.length) {
+        nodes.forEach(n => nodes.update({ id: n.id, color: { ...n.color, border: undefined }, borderWidth: 1 }));
+        return;
+      }
+      const clickedId = params.nodes[0];
+      const connectedNodes = network.getConnectedNodes(clickedId);
+      const highlight = new Set([clickedId, ...connectedNodes]);
+
+      nodes.forEach(n => {
+        const isHighlight = highlight.has(n.id);
+        nodes.update({
+          id: n.id,
+          color: {
+            background: n.color.background,
+            border: isHighlight ? "#ffffff" : "#4b5563"
+          },
+          borderWidth: isHighlight ? 2 : 1
+        });
+      });
+    });
   }
 
-  // === Render network graph dari event ===
   function buildNetwork(events) {
     nodes.clear();
     edges.clear();
@@ -519,7 +959,12 @@
           label,
           color: { background: color || "#6b7280" },
           group: groupKey,
+          value: 1
         });
+      } else {
+        const id = nodeIndex.get(label);
+        const existing = nodes.get(id);
+        nodes.update({ id, value: (existing.value || 1) + 1 });
       }
       return nodeIndex.get(label);
     }
@@ -528,25 +973,22 @@
       const eventId = addNode("E" + (idx + 1), "event", "#38bdf8");
       const text = (e.title + " " + e.summary).toLowerCase();
 
-      // aktor negara
       const actors =
-        text.match(/iran|north korea|syria|russia|china|israel|usa|un/i) || [];
+        text.match(/iran|north korea|dprk|syria|russia|china|israel|usa|un|who|opcw|iaea|eu/i) || [];
       actors.forEach((a) => {
         const id = addNode(a.toUpperCase(), "actor", "#a855f7");
         edges.add({ id: "e" + edgeId++, from: id, to: eventId });
       });
 
-      // lokasi
       const locs =
-        text.match(/natanz|yongbyon|damascus|tehran|tokyo|jakarta|halabja/i) || [];
+        text.match(/natanz|yongbyon|damascus|tehran|tokyo|jakarta|halabja|kyiv|gaza|moscow|zaporizhzhia|fukushima/i) || [];
       locs.forEach((loc) => {
         const id = addNode(loc, "loc", "#facc15");
         edges.add({ id: "e" + edgeId++, from: id, to: eventId });
       });
 
-      // prekursor / delivery
       const precs =
-        text.match(/uranium|plutonium|sarin|vx|mustard|cesium|cobalt/i) || [];
+        text.match(/uranium|plutonium|sarin|vx|mustard|cesium|cobalt|agent|nerve agent|toxic chemical/i) || [];
       precs.forEach((p) => {
         const id = addNode(p.toUpperCase(), "precursor", "#22c55e");
         edges.add({ id: "e" + edgeId++, from: id, to: eventId });
@@ -554,7 +996,6 @@
     });
   }
 
-  // === Timeline dengan D3 ===
   function buildTimeline(events) {
     const el = document.getElementById("timeline");
     el.innerHTML = "";
@@ -589,17 +1030,20 @@
       .enter()
       .append("circle")
       .attr("cx", (d) => x(d.date))
-      .attr("cy", height / 2)
-      .attr("r", (d) => 4 + riskScore(d) * 6)
+      .attr("cy", height / 2 + (Math.random() * 22 - 11))
+      .attr("r", 3.5)
       .attr("fill", (d) => {
-        const type = d.type || "chem";
-        return cbrneConfig[type]?.color || "#38bdf8";
+        if (d.type === "bio") return "#4ade80";
+        if (d.type === "chem") return "#4b5563";
+        if (d.type === "nuclear" || d.type === "rad") return "#f97373";
+        return "#38bdf8";
       })
+      .attr("stroke", (d) => (riskScore(d) > 0.75 ? "#f97373" : "transparent"))
+      .attr("stroke-width", (d) => (riskScore(d) > 0.75 ? 1.5 : 0))
       .attr("opacity", 0.9)
       .append("title")
       .text((d) => `${d.title}\n${d.date.toDateString()}`);
 
-    const last = events[0];
     svg
       .append("text")
       .attr("x", 40)
@@ -607,38 +1051,51 @@
       .attr("fill", "#9ca3af")
       .attr("font-size", 11)
       .text(
-        `Rentang waktu: ${dates[dates.length - 1].toDateString()} – ${
+        `Time span: ${dates[dates.length - 1].toDateString()} – ${
           dates[0].toDateString()
         }`
       );
   }
 
-  // === Render daftar event + KPI ===
-  function renderEventsAndKPI(events) {
+  function renderEventsAndKPI(allEvents) {
+    const timeWindow = document.getElementById("timeWindow").value;
+    const now = new Date();
+
+    const filtered = allEvents.filter(e => {
+      if (timeWindow === "all") return true;
+      const days = (now - e.date) / (1000 * 60 * 60 * 24);
+      return days <= Number(timeWindow);
+    });
+
     const listEl = document.getElementById("events");
     listEl.innerHTML = "";
-    if (!events.length) {
+    if (!filtered.length) {
       listEl.innerHTML =
-        '<p style="font-size:13px;color:var(--muted)">Belum ada laporan yang cocok dengan filter saat ini.</p>';
+        '<p style="font-size:13px;color:var(--muted)">No reports matched the current filters.</p>';
     }
 
     let violationCount = 0;
-    let highRiskCount = 0;
-    const now = new Date();
-    let last30 = 0;
+    let lastWindowCount = filtered.length;
 
-    events.forEach((e) => {
+    const q = document.getElementById("queryInput").value.trim();
+    function highlight(text) {
+      if (!q) return text;
+      const re = new RegExp("(" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "ig");
+      return text.replace(re, "<mark>$1</mark>");
+    }
+
+    filtered.forEach((e) => {
       const s = (e.summary || "").toLowerCase();
       const risk = riskScore(e);
+
       if (/non-compliance|violation|safeguards|resolution/.test(s)) {
         violationCount++;
       }
-      if (risk > 0.7) highRiskCount++;
-      const days = (now - e.date) / (1000 * 60 * 60 * 24);
-      if (days <= 30) last30++;
 
       const type = e.type || "chem";
       const badgeClass = cbrneConfig[type]?.badge || "badge-chem";
+
+      const cleanSummary = e.summary.replace(/<\/?[^>]+(>|$)/g, "").slice(0, 220);
 
       const div = document.createElement("div");
       div.className = "event-item";
@@ -648,22 +1105,24 @@
           <span class="badge" style="background:rgba(148,163,184,0.14);color:#e5e7eb;border:1px solid rgba(148,163,184,0.4);">
             Risk ${(risk * 100).toFixed(0)}%
           </span>
+          <span class="badge" style="background:rgba(15,23,42,0.9);color:#9ca3af;border:1px solid rgba(148,163,184,0.5);">
+            ${e.source}
+          </span>
         </div>
-        <a href="${e.link}" target="_blank" rel="noopener noreferrer">${e.title}</a>
+        <a href="${e.link}" target="_blank" rel="noopener noreferrer">${highlight(e.title)}</a>
         <div class="event-meta">
-          ${e.date.toDateString()}
+          ${e.date.toDateString()} · Source: ${e.source}
         </div>
         <div class="event-summary">
-          ${e.summary.replace(/<\/?[^>]+(>|$)/g, "").slice(0, 200)}…
+          ${highlight(cleanSummary)}…
         </div>
       `;
       listEl.appendChild(div);
     });
 
-    // KPI
     const avgRisk =
-      events.length > 0
-        ? (events.reduce((acc, e) => acc + riskScore(e), 0) / events.length).toFixed(
+      filtered.length > 0
+        ? (filtered.reduce((acc, e) => acc + riskScore(e), 0) / filtered.length).toFixed(
             2
           )
         : 0;
@@ -673,37 +1132,50 @@
     riskEl.textContent = avgRisk ? avgRisk : "–";
     riskLbl.textContent =
       avgRisk >= 0.7
-        ? "Elevated risk berdasarkan laporan publik"
-        : "Belum terindikasi eskalasi tajam";
+        ? "Elevated risk language in selected window"
+        : "No strong escalation signal in selected window";
 
     const evEl = document.getElementById("kpiEvents");
     const evLbl = document.getElementById("kpiEventsLabel");
-    evEl.textContent = last30;
-    evLbl.textContent = "Laporan relevan 30 hari terakhir";
+    evEl.textContent = lastWindowCount;
+    evLbl.textContent = `Reports referencing CBRNE topics in the selected time window`;
 
     const compEl = document.getElementById("kpiCompliance");
     const compLbl = document.getElementById("kpiComplianceLabel");
     compEl.textContent = violationCount;
-    compLbl.textContent = "Referensi non‑compliance dalam teks laporan";
+    compLbl.textContent = "Mentions of non‑compliance / violations / safeguards issues";
+
+    // timeline pakai filtered juga biar konsisten dengan timeWindow
+    buildTimeline(filtered);
   }
 
-  // === Handler utama ===
   async function runAnalysis() {
     const query = document.getElementById("queryInput").value.trim();
     const btn = document.getElementById("analyzeBtn");
     btn.disabled = true;
-    btn.textContent = "Mengambil & menganalisis data…";
+    btn.textContent = "Fetching and analysing…";
 
-    const events = await fetchEvents(query);
-    buildNetwork(events);
-    buildTimeline(events);
-    renderEventsAndKPI(events);
+    try {
+      const events = await fetchEvents(query);
+      eventsCache = events;
+      lastUpdated = new Date();
 
-    btn.disabled = false;
-    btn.textContent = "Update Intelligence Snapshot";
+      const lastUpdatedEl = document.getElementById("lastUpdated");
+      if (lastUpdatedEl && lastUpdated) {
+        lastUpdatedEl.textContent = "Last updated: " + lastUpdated.toUTCString();
+      }
+
+      buildNetwork(events);
+      renderEventsAndKPI(events);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to refresh OSINT feeds. Please try again in a few minutes.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Update intelligence snapshot";
+    }
   }
 
-  // === Event listeners ===
   document.getElementById("analyzeBtn").addEventListener("click", runAnalysis);
 
   document.getElementById("cbrnePills").addEventListener("click", (e) => {
@@ -716,11 +1188,19 @@
     runAnalysis();
   });
 
-  // Init awal
+  document.getElementById("timeWindow").addEventListener("change", () => {
+    if (eventsCache.length) {
+      renderEventsAndKPI(eventsCache);
+    }
+  });
+
   window.addEventListener("load", () => {
     initMap();
     initNetwork();
     runAnalysis();
+
+    // auto-refresh every 10 minutes while tab open[web:91][web:95]
+    setInterval(runAnalysis, 10 * 60 * 1000);
   });
 </script>
 </body>
